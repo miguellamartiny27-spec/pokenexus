@@ -176,18 +176,50 @@ loadSettings();resize();setupShop();rollOffers();loadGame();resize();updateUI();
   const installBtn = document.getElementById('installBtn');
   const updateBanner = document.getElementById('updateBanner');
   let waitingWorker = null;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+    navigator.standalone === true;
+  const installSeenKey = 'pokenexus_install_seen_v1';
+
+  // Mostra o convite apenas na primeira visita deste dispositivo.
+  // No iPhone/iPad a instalação é feita pelo menu Compartilhar do Safari.
+  if (installBtn && !isStandalone &&
+      !localStorage.getItem(installSeenKey) &&
+      !localStorage.getItem('pokenexus_manual_save_v1')) {
+    installBtn.style.display = 'inline-block';
+    localStorage.setItem(installSeenKey, '1');
+  }
+
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     installPrompt = event;
-    if (installBtn) installBtn.style.display = 'inline-block';
+    if (installBtn && !isStandalone &&
+        !localStorage.getItem('pokenexus_manual_save_v1')) {
+      installBtn.style.display = 'inline-block';
+    }
   });
+
   if (installBtn) installBtn.addEventListener('click', async () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    await installPrompt.userChoice;
-    installPrompt = null;
+    if (isStandalone) {
+      installBtn.style.display = 'none';
+      return;
+    }
+    if (installPrompt) {
+      installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      installPrompt = null;
+      if (choice && choice.outcome === 'accepted') installBtn.style.display = 'none';
+      return;
+    }
+    if (isIOS) {
+      alert('Para instalar no iPhone/iPad:\\n1. Abra este jogo no Safari.\\n2. Toque em Compartilhar (quadrado com seta para cima).\\n3. Escolha “Adicionar à Tela de Início”.\\n4. Toque em Adicionar.');
+    } else {
+      alert('Para instalar o PokéNexus, abra o menu do navegador (⋮ ou Compartilhar) e escolha “Instalar app” ou “Adicionar à tela inicial”.');
+    }
     installBtn.style.display = 'none';
   });
+
   window.addEventListener('appinstalled', () => {
     if (installBtn) installBtn.style.display = 'none';
   });
