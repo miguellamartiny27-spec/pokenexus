@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pokenexus-shell-v3';
+const CACHE_NAME = 'pokenexus-shell-v4';
 const APP_FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', (event) => {
