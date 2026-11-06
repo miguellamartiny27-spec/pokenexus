@@ -44,7 +44,8 @@ const TYPE_RESISTS={grass:['fire','grass','poison','flying','bug','dragon','stee
 const ENEMY_TYPES={Rattata:'normal',Pidgey:'flying',Zubat:'flying',Geodude:'rock',Ekans:'poison',Machop:'fighting',Gastly:'ghost',Onix:'rock',Scyther:'bug',Dragonite:'dragon',Mewtwo:'psychic'};
 function typeMultiplier(attackType,defenseType){if(!attackType||!defenseType)return 1;if((TYPE_EFFECTIVE[attackType]||[]).includes(defenseType))return 1.5;if((TYPE_RESISTS[attackType]||[]).includes(defenseType))return .65;return 1}
 
-let adminGodMode=false,adminTowerBuff=1;\nlet money=200,lives=20,wave=1,revives=1,balls=5,greatBalls=0,ultraBalls=0,encounter=null,auto=false,active=false,gameOver=false,spawnLeft=0,nextSpawn=0,selectedType=null,selectedTower=null,placingCaptured=null,towers=[],enemies=[],shots=[],zones=[],sparks=[],bursts=[],collection={},offers=[],lastSave=Date.now(),lastIdle=Date.now(),autoTick=0,toastTimer=0,frame=0;
+let adminGodMode=false,adminTowerBuff=1;
+let money=200,lives=20,wave=1,revives=1,balls=5,greatBalls=0,ultraBalls=0,encounter=null,auto=false,active=false,gameOver=false,spawnLeft=0,nextSpawn=0,selectedType=null,selectedTower=null,placingCaptured=null,towers=[],enemies=[],shots=[],zones=[],sparks=[],bursts=[],collection={},offers=[],lastSave=Date.now(),lastIdle=Date.now(),autoTick=0,toastTimer=0,frame=0;
 // Áudio original em estilo chiptune: efeitos curtos e música ambiente leve.
 let audioCtx=null,sfxOn=true,musicOn=false,musicTimer=null,musicStep=0,masterVolume=.65,renderQuality='high',renderScale=1,particlesOn=true;
 function audioReady(){if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(AC)audioCtx=new AC()}if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();return !!audioCtx}
