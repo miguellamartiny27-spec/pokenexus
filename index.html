@@ -195,7 +195,37 @@ function createEncounterUI(){if($('encounter'))return;let m=document.createEleme
 function showCaptureBalls(){if(!encounter)return;$('encBallArea').hidden=false;$('encMainActions').hidden=true;$('encInventory').textContent='🔴 '+balls+' · 🔵 '+greatBalls+' · 🟡 '+ultraBalls;let b=$('encButtons');b.innerHTML='';[['poke','🔴 Pokébola',balls],['great','🔵 Great Ball',greatBalls],['ultra','🟡 Ultra Ball',ultraBalls]].forEach(([type,label,count])=>{let btn=document.createElement('button');btn.textContent=label+' ('+count+')';btn.disabled=count<=0;btn.onclick=()=>attemptCapture(type);b.appendChild(btn)})}
 function chooseWild(){let pool=WILD.filter(w=>wave<4?w[1]==='Comum':wave<8?['Comum','Incomum'].includes(w[1]):wave<13?['Comum','Incomum','Raro'].includes(w[1]):wave<20?['Incomum','Raro','Épico'].includes(w[1]):true);let weights=pool.map(w=>({w,weight:({'Comum':60,'Incomum':27,'Raro':10,'Épico':2.5,'Lendário':.5})[w[1]]}));let total=weights.reduce((a,x)=>a+x.weight,0),roll=Math.random()*total;for(const x of weights){roll-=x.weight;if(roll<=0)return x.w}return pool[0]||WILD[0]}
 function triggerEncounter(){if(encounter||gameOver||Math.random()>Math.min(.24,.08+wave*.006))return;createEncounterUI();let [name,rarity]=chooseWild(),shiny=Math.random()<SHINY_CHANCE;encounter={name,rarity,shiny};$('encSprite').src=spriteUrl(shiny?'✨ Shiny '+name:name);$('encName').textContent=(shiny?'✨ SHINY ':'')+name;$('encMiniName').textContent=(shiny?'✨ ':'')+name;$('encRarity').textContent=rarity.toUpperCase()+' · '+RARITY_ODDS[rarity];$('encRarity').className='rar-'+rarity.toLowerCase();$('encText').textContent=shiny?'✨ SHINY! Chance: 1 em 4.096 (0,0244%)':'Chance de shiny: 1 em 4.096 (0,0244%)';$('encBallArea').hidden=true;$('encMainActions').hidden=false;$('encounter').classList.remove('expanded');$('encounter').classList.add('visible');let remaining=15;$('encTimer').textContent=remaining+'s';clearInterval(window.encounterClock);window.encounterClock=setInterval(()=>{if(!encounter){clearInterval(window.encounterClock);return}remaining--;$('encTimer').textContent=remaining+'s';if(remaining<=0){say(encounter.name+' escapou.');closeEncounter()}},1000)}
-function attemptCapture(type){if(!encounter)return;let key=type==='poke'?'balls':type==='great'?'greatBalls':'ultraBalls';if((key==='balls'?balls:key==='greatBalls'?greatBalls:ultraBalls)<=0)return;if(key==='balls')balls--;else if(key==='greatBalls')greatBalls--;else ultraBalls--;let base=({'Comum':.68,'Incomum':.48,'Raro':.30,'Épico':.16,'Lendário':.07})[encounter.rarity],bonus=({poke:0,great:.16,ultra:.30})[type];if(Math.random()<Math.min(.95,base+bonus)){let n=encounter.shiny?'✨ Shiny '+encounter.name:encounter.name;collection[n]=(collection[n]||0)+1;sfx('capture');say(n+' capturado! Foi para sua coleção.');closeEncounter()}else if(Math.random()<.45){say(encounter.name+' escapou!');closeEncounter()}else{say('A captura falhou, mas ele ainda está aqui!');$('encInventory').textContent='🔴 '+balls+' · 🔵 '+greatBalls+' · 🟡 '+ultraBalls;[...$('encButtons').children].forEach((btn,i)=>btn.disabled=[balls,greatBalls,ultraBalls][i]<=0)}updateUI();saveGame(false)}
+function attemptCapture(type){
+ if(!encounter)return;
+ const ballConfig={
+  poke:{key:'balls',label:'Pokébola',multiplier:1},
+  great:{key:'greatBalls',label:'Great Ball',multiplier:1.6},
+  ultra:{key:'ultraBalls',label:'Ultra Ball',multiplier:2.2}
+ };
+ const selected=ballConfig[type];
+ if(!selected){say('Tipo de Pokébola inválido.');return}
+ if(window[selected.key]<=0){say('Você não tem '+selected.label+'!');return}
+ window[selected.key]--;
+ const baseChance=({'Comum':.68,'Incomum':.48,'Raro':.30,'Épico':.16,'Lendário':.07})[encounter.rarity]??.1;
+ const captureChance=Math.min(.98,baseChance*selected.multiplier);
+ const caught=Math.random()<captureChance;
+ if(caught){
+  const capturedName=encounter.shiny?'✨ Shiny '+encounter.name:encounter.name;
+  collection[capturedName]=(collection[capturedName]||0)+1;
+  sfx('capture');
+  say(capturedName+' capturado com '+selected.label+'! Foi para sua coleção.');
+  closeEncounter();
+ }else if(Math.random()<.35){
+  say(encounter.name+' escapou após a tentativa com '+selected.label+'.');
+  closeEncounter();
+ }else{
+  say(selected.label+' não conseguiu capturar. O Pokémon continua aqui!');
+  $('encInventory').textContent='🔴 '+balls+' · 🔵 '+greatBalls+' · 🟡 '+ultraBalls;
+  [...$('encButtons').children].forEach((btn,i)=>btn.disabled=[balls,greatBalls,ultraBalls][i]<=0);
+ }
+ updateUI();
+ saveGame(false);
+}
 function closeEncounter(){encounter=null;clearInterval(window.encounterClock);if($('encounter'))$('encounter').classList.remove('visible')}
 function refreshMarket(){renderMarket();}
 function buyRevive(){if(money<250){say('Você precisa de 250 moedas.');return}money-=250;revives++;say('1 revive comprado!');updateUI();saveGame(false)}
