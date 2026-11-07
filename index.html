@@ -198,18 +198,18 @@ function triggerEncounter(){if(encounter||gameOver||Math.random()>Math.min(.24,.
 function attemptCapture(type){
  if(!encounter)return;
  const ballConfig={
-  poke:{key:'balls',label:'Pokébola',multiplier:1},
-  great:{key:'greatBalls',label:'Great Ball',multiplier:1.6},
-  ultra:{key:'ultraBalls',label:'Ultra Ball',multiplier:2.2}
+  poke:{label:'Pokébola',multiplier:1},
+  great:{label:'Great Ball',multiplier:1.6},
+  ultra:{label:'Ultra Ball',multiplier:2.2}
  };
  const selected=ballConfig[type];
  if(!selected){say('Tipo de Pokébola inválido.');return}
- if(window[selected.key]<=0){say('Você não tem '+selected.label+'!');return}
- window[selected.key]--;
+ const available=type==='poke'?balls:type==='great'?greatBalls:ultraBalls;
+ if(available<=0){say('Você não tem '+selected.label+'!');return}
+ if(type==='poke')balls--;else if(type==='great')greatBalls--;else ultraBalls--;
  const baseChance=({'Comum':.68,'Incomum':.48,'Raro':.30,'Épico':.16,'Lendário':.07})[encounter.rarity]??.1;
  const captureChance=Math.min(.98,baseChance*selected.multiplier);
- const caught=Math.random()<captureChance;
- if(caught){
+ if(Math.random()<captureChance){
   const capturedName=encounter.shiny?'✨ Shiny '+encounter.name:encounter.name;
   collection[capturedName]=(collection[capturedName]||0)+1;
   sfx('capture');
